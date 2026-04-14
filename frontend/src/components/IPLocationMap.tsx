@@ -34,23 +34,24 @@ export function IPLocationMap({ location }: IPLocationMapProps) {
       const script = document.createElement('script')
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
       script.onload = () => {
-        if (window.L && mapRef.current) {
+        const leaflet = (window as any).L
+        if (leaflet && mapRef.current) {
           // Initialize map
           if (!mapInstanceRef.current) {
-            mapInstanceRef.current = window.L.map(mapRef.current).setView(
+            mapInstanceRef.current = leaflet.map(mapRef.current).setView(
               [location.latitude, location.longitude],
               9
             )
 
             // Add OpenStreetMap tiles
-            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '© OpenStreetMap contributors',
               maxZoom: 19,
             }).addTo(mapInstanceRef.current)
           }
 
           // Add marker
-          window.L.marker([location.latitude, location.longitude])
+          leaflet.marker([location.latitude, location.longitude])
             .addTo(mapInstanceRef.current)
             .bindPopup(
               `<div class="text-sm">
