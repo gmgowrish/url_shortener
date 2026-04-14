@@ -22,7 +22,9 @@ export function IPLocationMap({ location }: IPLocationMapProps) {
   useEffect(() => {
     // Dynamically load Leaflet only when needed
     const loadMap = async () => {
-      if (!mapRef.current || !location.latitude || !location.longitude) return
+      const latitude = location.latitude
+      const longitude = location.longitude
+      if (!mapRef.current || latitude == null || longitude == null) return
 
       // Load Leaflet CSS
       const link = document.createElement('link')
@@ -39,7 +41,7 @@ export function IPLocationMap({ location }: IPLocationMapProps) {
           // Initialize map
           if (!mapInstanceRef.current) {
             mapInstanceRef.current = leaflet.map(mapRef.current).setView(
-              [location.latitude, location.longitude],
+              [latitude, longitude],
               9
             )
 
@@ -51,19 +53,19 @@ export function IPLocationMap({ location }: IPLocationMapProps) {
           }
 
           // Add marker
-          leaflet.marker([location.latitude, location.longitude])
+          leaflet.marker([latitude, longitude])
             .addTo(mapInstanceRef.current)
             .bindPopup(
               `<div class="text-sm">
                 <strong>${location.city}, ${location.country}</strong><br/>
-                📍 ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}<br/>
+                📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}<br/>
                 🏢 ${location.isp}
               </div>`
             )
             .openPopup()
 
           // Re-center map
-          mapInstanceRef.current.setView([location.latitude, location.longitude], 9)
+          mapInstanceRef.current.setView([latitude, longitude], 9)
         }
       }
       document.head.appendChild(script)
