@@ -1,0 +1,60 @@
+# Render Blueprint Configuration
+# Deploy with: render-cli push
+
+services:
+  # PostgreSQL Database
+  - type: web
+    name: urlshortener-db
+    env: postgres
+    plan: free
+    region: oregon
+    database:
+      name: urlshortener
+      production: false
+
+  # Redis Cache
+  - type: redis
+    name: urlshortener-redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: noeviction
+
+  # Django Backend
+  - type: web
+    name: urlshortener-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: |
+      pip install -r backend/requirements.txt
+      python backend/manage.py collectstatic --noinput
+      python backend/manage.py migrate
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    workingDirectory: backend
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: urlshortener-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: urlshortener-redis
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: BASE_URL
+        sync: false
+    healthCheckPath: /health/
+    disk:
+      name: staticfiles
+      mountPath: /app/staticfiles
+      sizeGB: 1

@@ -1,0 +1,54 @@
+# Root .gitignore
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.pyc
+__pycache__/
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+.next/
+node_modules/
+build/
+dist/
+
+# Logs
+*.log
+logs/
+
+# Database
+*.sqlite3
+*.db
+
+# Secrets (never commit these)
+**/secrets/
+*.pem
+*.key
+credentials.json
+service-account.json
+
+# Vercel
+.vercel
+
+# Render
+.render
+
+# Coverage
+coverage/
+coverage.xml
