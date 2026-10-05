@@ -7,21 +7,40 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check Vercel secrets
+        id: secrets
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::notice::VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID are not set; skipping CLI deploy (Vercel's Git integration can still deploy)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
 
+      - uses: actions/checkout@v5
+        if: steps.secrets.outputs.ready == 'true'
+
+      - uses: actions/setup-node@v5
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          node-version: 20
+
+      # Run from the repo root: the Vercel project's Root Directory is set to `frontend`
+      # (see docs/DEPLOYMENT.md), so running inside frontend/ would look for frontend/frontend.
       - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        if: steps.secrets.outputs.ready == 'true'
         run: |
           npm install -g vercel
-          cd frontend
-          vercel pull --yes --token=$VERCEL_TOKEN
-          vercel build --yes --token=$VERCEL_TOKEN
-          vercel deploy --prod --yes --token=$VERCEL_TOKEN
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          vercel build --prod --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
